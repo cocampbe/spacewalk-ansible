@@ -32,6 +32,13 @@ options:
         description:
             - Satellite password.
         required: true
+    listtype:
+        description:
+            - returns all systems by default. setting to ood will only return Out Of Date systems.
+        choices:
+          - all (default)
+          - ood
+        required: false
 '''
 
 EXAMPLES = '''
@@ -57,6 +64,13 @@ def get_system_list(client, session):
         system_names.append(system['name'])
     return system_names
 
+def get_ood_system_list(client, session):
+    system_names = []
+    systems = client.system.listOutOfDateSystems(session)
+    for system in systems:
+        system_names.append(system['name'])
+    return system_names
+
 
 def main():
 
@@ -64,13 +78,15 @@ def main():
         argument_spec=dict(
             url=dict(type='str', required=True),
             user=dict(type='str', required=True),
-            password=dict(type='str', required=True, aliases=['pwd'], no_log=True),
+            password=dict(type='str', required=True, no_log=True),
+            listtype=dict(type='str', required=False, default='all', choices=['all', 'ood']),
         )
     )
 
     result = {}
     result['url'] = url = module.params['url']
     result['user'] = user = module.params['user']
+    result['listtype'] = listtype = module.params['listtype']
     password = module.params['password']
 
     # Initialize connection
@@ -85,10 +101,14 @@ def main():
 
     # Get system list
     try:
-        system_list = get_system_list(client, session)
+        if listtype == 'ood':
+            system_list = get_ood_system_list(client, session)
+        else:
+            system_list = get_system_list(client, session)
         result['changed'] = True
         result['msg'] = "System list successful."
         result['system_list'] = system_list
+        result['count'] = len(system_list)
         module.exit_json(**result)
     except Exception as e:
         result['changed'] = False
