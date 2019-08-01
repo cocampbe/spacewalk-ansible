@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - sat_system_list:
+        url: https://satellite.example.com/rpc/api
+        user: sat_admin
+        password: My super secret password!
+      register: systems
+
+    - debug: msg="{{item}}"
+      loop: "{{systems.system_list}}"
