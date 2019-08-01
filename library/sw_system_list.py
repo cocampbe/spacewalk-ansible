@@ -12,7 +12,7 @@ ANSIBLE_METADATA = {'metadata_version': '2.8',
 
 DOCUMENTATION = '''
 ---
-module: sat_system_list
+module: sw_system_list
 short_description: Returns system list
 description:
     - Returns system list
@@ -22,7 +22,7 @@ author:
 options:
     url:
         description:
-            - The full URL to the RHN/Satellite API.
+            - The full URL to the Spacewalk API.
         required: true
     user:
         description:
@@ -42,10 +42,10 @@ options:
 '''
 
 EXAMPLES = '''
-- sat_system_list:
-    url: https://satellite.example.com/rpc/api
-    user: sat_user
-    password: sat_password
+- sw_system_list:
+    url: https://spacewalk.example.com/rpc/api
+    user: sw_user
+    password: sw_password
   register: systems
 
   - debug: msg="{{item}}"
@@ -94,10 +94,10 @@ def main():
     try:
         session = client.auth.login(user, password)
     except Exception as e:
-        module.fail_json(msg="Cannot connect to sattelite server: %s " % to_text(e))
+        module.fail_json(msg="Cannot connect to spacewalk server: %s " % to_text(e))
 
     if not session:
-        module.fail_json(msg="Cannot connect to sattelite server.")
+        module.fail_json(msg="Cannot connect to spacewalk server.")
 
     # Get system list
     try:
