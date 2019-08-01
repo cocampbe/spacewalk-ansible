@@ -2,9 +2,9 @@
 - hosts: localhost
   gather_facts: no
   tasks:
-    - sat_system_list:
-        url: https://satellite.example.com/rpc/api
-        user: sat_admin
+    - sw_system_list:
+        url: https://spacewalk.example.com/rpc/api
+        user: sw_admin
         password: My super secret password!
       register: systems
 
