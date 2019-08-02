@@ -32,12 +32,9 @@ options:
         description:
             - Satellite password.
         required: true
-    listtype:
+    out_of_date:
         description:
-            - returns all systems by default. setting to ood will only return Out Of Date systems.
-        choices:
-          - all (default)
-          - ood
+            - returns out of date systems only.
         required: false
 '''
 
@@ -79,14 +76,14 @@ def main():
             url=dict(type='str', required=True),
             user=dict(type='str', required=True),
             password=dict(type='str', required=True, no_log=True),
-            listtype=dict(type='str', required=False, default='all', choices=['all', 'ood']),
+            out_of_date=dict(type='str', required=False),
         )
     )
 
     result = {}
     result['url'] = url = module.params['url']
     result['user'] = user = module.params['user']
-    result['listtype'] = listtype = module.params['listtype']
+    out_of_date = module.params['out_of_date']
     password = module.params['password']
 
     # Initialize connection
@@ -101,7 +98,7 @@ def main():
 
     # Get system list
     try:
-        if listtype == 'ood':
+        if out_of_date:
             system_list = get_ood_system_list(client, session)
         else:
             system_list = get_system_list(client, session)
