@@ -13,7 +13,7 @@ ANSIBLE_METADATA = {'metadata_version': '2.8',
 DOCUMENTATION = '''
 ---
 module: sw_system_packages
-short_description: spacewalk pacakge module
+short_description: spacewalk package module
 description:
     - Returns package list.
 version_added: "2.8"
