@@ -30,12 +30,17 @@ options:
         required: true
     user:
         description:
-            - Satellite login.
+            - spacewalk login.
         required: true
     password:
         description:
-            - Satellite password.
+            - spacewalk password.
         required: true
+    upgradable:
+        description:
+            - spacewalk password.
+        options: yes|no
+        required: false
 '''
 
 EXAMPLES = '''
@@ -71,9 +76,12 @@ def get_packages(client, session, systemId):
     return package_names
 
 
-def get_upgradable_pacakges(client, session):
-    pacakges = client.system.listLatestUpgradablePackages(session)
-    return packages
+def get_upgradable_packages(client, session, systemId):
+    package_names = []
+    packages = client.system.listLatestUpgradablePackages(session,systemId)
+    for package in packages:
+        package_names.append(package['name'])
+    return package_names
 
 
 def main():
@@ -84,6 +92,7 @@ def main():
             url=dict(type='str', required=True),
             user=dict(type='str', required=True),
             password=dict(type='str', required=True, no_log=True),
+            upgradable=dict(type='bool', required=False, default=False),
         )
     )
 
@@ -92,6 +101,7 @@ def main():
     result['url'] = url = module.params['url']
     result['user'] = user = module.params['user']
     password = module.params['password']
+    result['upgradable'] = upgradable = module.params['upgradable']
 
     # Initialize connection
     client = xmlrpc_client.ServerProxy(url)
@@ -106,14 +116,17 @@ def main():
     # Get system list
     try:
         systemId = get_system_id(client, session, system)
-        package_list = get_packages(client, session, systemId)
+        if upgradable:
+            package_list = get_upgradable_packages(client, session, systemId)
+        else:
+            package_list = get_packages(client, session, systemId)
         result['packages'] = package_list
         result['changed'] = True
         result['count'] = len(package_list)
         module.exit_json(**result)
     except Exception as e:
         result['changed'] = False
-        result['msg'] = "Error getting packages."
+        result['msg'] = str(e)
         module.fail_json(**result)
     finally:
         client.auth.logout(session)
