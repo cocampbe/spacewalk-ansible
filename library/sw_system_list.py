@@ -35,6 +35,12 @@ options:
     out_of_date:
         description:
             - returns out of date systems only.
+        type: bool
+        required: false
+    physical:
+        description:
+            - Returns physical systems. ** Will also return LXC containers.
+        type: bool
         required: false
 '''
 
@@ -46,7 +52,7 @@ EXAMPLES = '''
   register: systems
 
   - debug: msg="{{item}}"
-    loop: "{{systems.system_list}}"
+    loop: "{{systems.systems}}"
 '''
 
 from ansible.module_utils._text import to_text
@@ -69,6 +75,14 @@ def get_ood_system_list(client, session):
     return system_names
 
 
+def get_phys_system_list(client, session):
+    system_names = []
+    systems = client.system.listPhysicalSystems(session)
+    for system in systems:
+        system_names.append(system['name'])
+    return system_names
+
+
 def main():
 
     module = AnsibleModule(
@@ -76,14 +90,16 @@ def main():
             url=dict(type='str', required=True),
             user=dict(type='str', required=True),
             password=dict(type='str', required=True, no_log=True),
-            out_of_date=dict(type='str', required=False),
+            out_of_date=dict(type='bool', required=False, default=False),
+            physical=dict(type='bool', required=False, default=False),
         )
     )
 
     result = {}
     result['url'] = url = module.params['url']
     result['user'] = user = module.params['user']
-    out_of_date = module.params['out_of_date']
+    result['out_of_date'] = out_of_date = module.params['out_of_date']
+    result['physical'] = physical = module.params['physical']
     password = module.params['password']
 
     # Initialize connection
@@ -100,16 +116,18 @@ def main():
     try:
         if out_of_date:
             system_list = get_ood_system_list(client, session)
+        elif physical:
+            system_list = get_phys_system_list(client, session)
         else:
             system_list = get_system_list(client, session)
         result['changed'] = True
         result['msg'] = "System list successful."
-        result['system_list'] = system_list
+        result['systems'] = system_list
         result['count'] = len(system_list)
         module.exit_json(**result)
     except Exception as e:
         result['changed'] = False
-        result['msg'] = "Error getting system list."
+        result['msg'] = str(e)
         module.exit_json(**result)
     finally:
         client.auth.logout(session)
