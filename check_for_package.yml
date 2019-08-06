@@ -1,0 +1,30 @@
+---
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - sw_system_list:
+        url: https://spacewalk.example.com/rpc/api
+        user: sw_admin
+        password: "{{my_pass}}"
+      register: systems
+      vars:
+        my_pass: !vault 
+
+    - sw_system_packages:
+        name: "{{item}}"
+        url: https://spacewalk.example.com/rpc/api
+        user: sw_admin
+        password: "{{my_pass}}"
+      register: packages
+      vars:
+        my_pass: !vault 
+      loop: "{{systems.systems}}"
+      
+
+    - name: create file with list of hosts that do not have monit installed
+      lineinfile: 
+        path: ./output.txt
+        line: "{{item.system}}"
+        create: yes
+      loop: "{{packages.results}}"
+      when: '"monit" not in item.packages'
