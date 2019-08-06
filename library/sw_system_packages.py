@@ -38,7 +38,12 @@ options:
         required: true
     upgradable:
         description:
-            - Return upgradable pacakges.
+            - Return upgradable packages.
+        type: bool
+        required: false
+    extra:
+        description:
+            - Return extra packages.
         type: bool
         required: false
 '''
@@ -84,6 +89,14 @@ def get_upgradable_packages(client, session, systemId):
     return package_names
 
 
+def get_extra_packages(client, session, systemId):
+    package_names = []
+    packages = client.system.listExtraPackages(session,systemId)
+    for package in packages:
+        package_names.append(package['name'])
+    return package_names
+
+
 def main():
 
     module = AnsibleModule(
@@ -93,6 +106,7 @@ def main():
             user=dict(type='str', required=True),
             password=dict(type='str', required=True, no_log=True),
             upgradable=dict(type='bool', required=False, default=False),
+            extra=dict(type='bool', required=False, default=False),
         )
     )
 
@@ -102,6 +116,7 @@ def main():
     result['user'] = user = module.params['user']
     password = module.params['password']
     result['upgradable'] = upgradable = module.params['upgradable']
+    result['extra'] = extra = module.params['extra']
 
     # Initialize connection
     client = xmlrpc_client.ServerProxy(url)
@@ -118,6 +133,8 @@ def main():
         systemId = get_system_id(client, session, system)
         if upgradable:
             package_list = get_upgradable_packages(client, session, systemId)
+        elif extra:
+            package_list = get_extra_packages(client, session, systemId)
         else:
             package_list = get_packages(client, session, systemId)
         result['packages'] = package_list
