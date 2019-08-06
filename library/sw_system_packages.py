@@ -38,8 +38,8 @@ options:
         required: true
     upgradable:
         description:
-            - spacewalk password.
-        options: yes|no
+            - Return upgradable pacakges.
+        type: bool
         required: false
 '''
 
